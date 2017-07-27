@@ -1,6 +1,62 @@
 bwdval = {};
 bwdCo = {};
 
+// SITE UTILITY FUNCTIONS
+
+// Get every span with class "date-utc2local" or "datetime-utc2local" and convert the text to the user's local time.
+function convertUTC2Local(dateformat) {
+	if (!dateformat) {dateformat = 'globalstandard'}
+	var $spn = jQuery("span.datetime-utc2local").add("span.date-utc2local");
+	
+	$spn.map(function(){
+		if (!$(this).data("converted_local_time")) {
+			var date_obj = new Date(jQuery(this).text());
+			if (!isNaN(date_obj.getDate())) {
+				if (dateformat = 'globalstandard') {
+					//console.log('globalstandard (' + dateformat + ')');
+					var d = date_obj.getDate() + ' ' + jsMonthAbbr[date_obj.getMonth()] + ' ' + date_obj.getFullYear();
+				} else {
+					//console.log('other (' + dateformat + ')');
+					var d = (date_obj.getMonth()+1) + "/" + date_obj.getDate() + "/" + date_obj.getFullYear();
+					if (dateformat == "DD/MM/YYYY") {
+						d = date_obj.getDate() + "/" + (date_obj.getMonth()+1) + "/" + date_obj.getFullYear();
+					}
+				}
+				if ($(this).hasClass("datetime-utc2local")) {
+					var h = date_obj.getHours() % 12;
+					if (h==0) {h = 12;}
+					var m = "0" + date_obj.getMinutes();
+					m = m.substring(m.length - 2,m.length+1)
+					var t = h + ":" + m;
+					if (date_obj.getHours() >= 12) {t = t + " PM";} else {t = t + " AM";}
+					
+					$(this).text(d + " " + t);
+				} else {
+					$(this).text(d);
+				}
+				$(this).data("converted_local_time",true);
+			} else {console.log("isNaN returned true on " + date_obj.getDate())}
+		} else {console.log($(this).data("converted_local_time"));}
+	});
+}
+
+//	The following two functions allow JavaScript to determine for a given date whether DST is in effect for the local user.
+Date.prototype.stdTimezoneOffset = function() {
+	// returns the standard time zone offset by returning the greater offset of Jan 1 and Jul 1 (JS returns the offset in minutes and reverses the sign)
+	var jan = new Date(this.getFullYear(), 0, 1);
+	var jul = new Date(this.getFullYear(), 6, 1);
+	return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+Date.prototype.isDST = function() {
+	// returns true if the date's offset is less than standard, else false
+	return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
+Date.prototype.timezoneOffsetMinutes = function() {
+	var temp_date = new Date();
+	return temp_date.getTimezoneOffset() * -1;
+}
+
+// END SITE UTILITY FUNCTIONS
 
 
 function BWD_getAuth0Token(tokenType) {
